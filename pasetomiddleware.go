@@ -130,8 +130,8 @@ func (p *PasetoMiddleware) handlePaseto(w http.ResponseWriter, r *http.Request) 
 		p.logf("Paseto decrypted: %s - %s\n", token, footer)
 	}
 
-	c := context.WithValue(r.Context(), p.Options.TokenProperty, token)
-	c = context.WithValue(c, p.Options.FooterProperty, footer)
+	c := context.WithValue(r.Context(), p.Options.TokenProperty, &token)
+	c = context.WithValue(c, p.Options.FooterProperty, &footer)
 	newRequest := r.WithContext(c)
 
 	*r = *newRequest
