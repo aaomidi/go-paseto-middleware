@@ -12,7 +12,7 @@ go get github.com/aaomidi/go-paseto-middleware
 
 ## Using it
 
-This library is written for use with [o1egl's paseto library]("https://github.com/o1egl/paseto").
+This library is written for use with [o1egl's paseto library](https://github.com/o1egl/paseto).
 
 You can use the `pasetomiddleware` with default `net/http` as follows:
 
