@@ -93,9 +93,9 @@ func (p *PasetoMiddleware) handlePaseto(w http.ResponseWriter, r *http.Request) 
 	pas, err := p.Options.Extractor(r)
 
 	if err != nil {
-		p.logf("Error extracting Paseto: %v", err)
+		p.logf("Error extracting Paseto: %v\n", err)
 	} else {
-		p.logf("Token extracted: %s", pas)
+		p.logf("Token extracted: %s\n", pas)
 	}
 
 	if err != nil {
@@ -105,13 +105,13 @@ func (p *PasetoMiddleware) handlePaseto(w http.ResponseWriter, r *http.Request) 
 
 	if pas == "" {
 		if p.Options.CredentialsOptional {
-			p.logf("\tNo credentials found (CredentialsOptional=true)")
+			p.logf("\tNo credentials found (CredentialsOptional=true)\n")
 			return nil
 		}
 
 		errorMsg := "required auth paseto not found"
 		p.Options.ErrorHandler(w, r, errors.New(errorMsg))
-		p.logf("\tError: No credentials found (CredentialsOptional=false)")
+		p.logf("\tError: No credentials found (CredentialsOptional=false)\n")
 		return fmt.Errorf(errorMsg)
 	}
 
@@ -123,11 +123,11 @@ func (p *PasetoMiddleware) handlePaseto(w http.ResponseWriter, r *http.Request) 
 	err = p.Options.Decryptor(pas, &token, &footer)
 
 	if err != nil {
-		p.logf("Error decrypting pas: %v", err)
+		p.logf("Error decrypting pas: %v\n", err)
 		p.Options.ErrorHandler(w, r, err)
 		return fmt.Errorf("error decrypting pas")
 	} else {
-		p.logf("Paseto decrypted: %s - %s", token, footer)
+		p.logf("Paseto decrypted: %s - %s\n", token, footer)
 	}
 
 	c := context.WithValue(r.Context(), p.Options.TokenProperty, token)
