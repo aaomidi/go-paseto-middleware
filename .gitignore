@@ -7,7 +7,6 @@
 ### Go ###
 # Binaries for programs and plugins
 *.exe
-*.exe~
 *.dll
 *.so
 *.dylib
@@ -18,27 +17,15 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
+.glide/
+
 ### JetBrains ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 # User-specific stuff:
-.idea/**/workspace.xml
-.idea/**/tasks.xml
-.idea/dictionaries
-
-# Sensitive or high-churn files:
-.idea/**/dataSources/
-.idea/**/dataSources.ids
-.idea/**/dataSources.xml
-.idea/**/dataSources.local.xml
-.idea/**/sqlDataSources.xml
-.idea/**/dynamic.xml
-.idea/**/uiDesigner.xml
-
-# Gradle:
-.idea/**/gradle.xml
-.idea/**/libraries
+.idea/
 
 # CMake
 cmake-build-debug/
@@ -62,9 +49,6 @@ atlassian-ide-plugin.xml
 
 # Cursive Clojure plugin
 .idea/replstate.xml
-
-# Ruby plugin and RubyMine
-/.rakeTasks
 
 # Crashlytics plugin (for Android Studio and IntelliJ)
 com_crashlytics_export_strings.xml
@@ -146,7 +130,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-
-# End of https://www.gitignore.io/api/go,osx,git,linux,windows,jetbrains
+*.a
 
 /vendor/
