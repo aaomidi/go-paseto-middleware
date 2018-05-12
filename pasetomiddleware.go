@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"github.com/o1egl/paseto"
 )
 
 type ErrorHandler func(w http.ResponseWriter, r *http.Request, err error)
 
 type TokenExtractor func(r *http.Request) (string, error)
-type TokenDecryptor func(paseto string, token, footer *string) error
+type TokenDecryptor func(pas string, token *paseto.JSONToken, footer *string) error
 
 // Options is a struct for specifying configuration of the middleware
 type Options struct {
@@ -23,7 +24,7 @@ type Options struct {
 	TokenProperty string
 
 	// The name of the property where the footer will be stored
-	// Default value: paseto_footer
+	// Default value: paseto footer
 	FooterProperty string
 
 	ErrorHandler ErrorHandler
@@ -89,20 +90,20 @@ func (p *PasetoMiddleware) HandlerWithNext(w http.ResponseWriter, r *http.Reques
 }
 
 func (p *PasetoMiddleware) handlePaseto(w http.ResponseWriter, r *http.Request) error {
-	paseto, err := p.Options.Extractor(r)
+	pas, err := p.Options.Extractor(r)
 
 	if err != nil {
 		p.logf("Error extracting Paseto: %v", err)
 	} else {
-		p.logf("Token extracted: %s", paseto)
+		p.logf("Token extracted: %s", pas)
 	}
 
 	if err != nil {
 		p.Options.ErrorHandler(w, r, err)
-		return fmt.Errorf("error extracting paseto: %v", err)
+		return fmt.Errorf("error extracting pas: %v", err)
 	}
 
-	if paseto == "" {
+	if pas == "" {
 		if p.Options.CredentialsOptional {
 			p.logf("\tNo credentials found (CredentialsOptional=true)")
 			return nil
@@ -114,14 +115,17 @@ func (p *PasetoMiddleware) handlePaseto(w http.ResponseWriter, r *http.Request) 
 		return fmt.Errorf(errorMsg)
 	}
 
-	var token, footer string
+	var (
+		footer string
+		token  paseto.JSONToken
+	)
 
-	err = p.Options.Decryptor(paseto, &token, &footer)
+	err = p.Options.Decryptor(pas, &token, &footer)
 
 	if err != nil {
-		p.logf("Error decrypting paseto: %v", err)
+		p.logf("Error decrypting pas: %v", err)
 		p.Options.ErrorHandler(w, r, err)
-		return fmt.Errorf("error decrypting paseto")
+		return fmt.Errorf("error decrypting pas")
 	} else {
 		p.logf("Paseto decrypted: %s - %s", token, footer)
 	}
