@@ -2,7 +2,7 @@
 [![License](http://img.shields.io/:license-mit-blue.svg)](LICENSE)
 [![Travis](https://travis-ci.com/aaomidi/go-paseto-middleware.svg?branch=master&style=flat-square)](https://travis-ci.com/aaomidi/go-paseto-middleware)
 [![Go Report Card](https://goreportcard.com/badge/github.com/aaomidi/go-paseto-middleware)](https://goreportcard.com/report/github.com/aaomidi/go-paseto-middleware)
-[![GoDoc](https://godoc.org/github.com/aaomidi/go-paseto-middleware?status.svg)](https://godoc.org/github.com/aaomidi/go-pasteo-middleware)
+[![GoDoc](https://godoc.org/github.com/aaomidi/go-paseto-middleware?status.svg)](https://godoc.org/github.com/aaomidi/go-paseto-middleware)
 
 
 A middleware that will check that a Paseto token is sent in a request. It will then set the contents of the token into the context of the request.
