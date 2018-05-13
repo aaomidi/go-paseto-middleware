@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
 	"github.com/o1egl/paseto"
 )
 
@@ -14,8 +15,10 @@ type ErrorHandler func(w http.ResponseWriter, r *http.Request, err error)
 type TokenExtractor func(r *http.Request) (string, error)
 type TokenDecryptor func(pas string, token *paseto.JSONToken, footer *string) error
 
-// Options is a struct for specifying configuration of the middleware
-type Options struct {
+// Option is a function for setting options within the PasetoMiddleware struct
+type Option func(*PasetoMiddleware)
+
+type PasetoMiddleware struct {
 	Extractor TokenExtractor
 	Decryptor TokenDecryptor
 
@@ -32,65 +35,60 @@ type Options struct {
 	CredentialsOptional bool
 
 	Debug bool
+
+	log.Logger
 }
 
-type PasetoMiddleware struct {
-	Options Options
+func (p *PasetoMiddleware) Next(handler http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := p.handlePaseto(w, r); err == nil && handler != nil {
+			handler.ServeHTTP(w, r)
+		}
+	}
+}
+
+func (p *PasetoMiddleware) NextFunc(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := p.handlePaseto(w, r); err == nil && handler != nil {
+			handler.ServeHTTP(w, r)
+		}
+	}
 }
 
 func OnError(w http.ResponseWriter, r *http.Request, err error) {
 	http.Error(w, err.Error(), http.StatusUnauthorized)
 }
 
-func New(options ...Options) (*PasetoMiddleware, error) {
-	var opts Options
-	if len(options) == 0 {
-		opts = Options{}
-	} else {
-		opts = options[0]
+func New(options ...Option) (*PasetoMiddleware, error) {
+	def := &PasetoMiddleware{
+		TokenProperty:  "token",
+		FooterProperty: "paseto_footer",
+		ErrorHandler:   OnError,
 	}
 
-	if opts.TokenProperty == "" {
-		opts.TokenProperty = "token"
+	for _, o := range options {
+		o(def)
 	}
 
-	if opts.FooterProperty == "" {
-		opts.FooterProperty = "paseto_footer"
-	}
-
-	if opts.ErrorHandler == nil {
-		opts.ErrorHandler = OnError
-	}
-
-	if opts.Extractor == nil {
+	if def.Extractor == nil {
 		return nil, errors.New("extractor not defined")
 	}
 
-	if opts.Decryptor == nil {
+	if def.Decryptor == nil {
 		return nil, errors.New("decryptor not defined")
 	}
 
-	return &PasetoMiddleware{Options: opts}, nil
+	return def, nil
 }
 
 func (p *PasetoMiddleware) logf(format string, args ...interface{}) {
-	if p.Options.Debug {
+	if p.Debug {
 		log.Printf(format, args)
 	}
 }
 
-// Special implementation for Negroni, but could be used elsewhere.
-func (p *PasetoMiddleware) HandlerWithNext(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	err := p.handlePaseto(w, r)
-
-	// If there was an error, do not call next.
-	if err == nil && next != nil {
-		next(w, r)
-	}
-}
-
 func (p *PasetoMiddleware) handlePaseto(w http.ResponseWriter, r *http.Request) error {
-	pas, err := p.Options.Extractor(r)
+	pas, err := p.Extractor(r)
 
 	if err != nil {
 		p.logf("Error extracting Paseto: %v\n", err)
@@ -99,18 +97,18 @@ func (p *PasetoMiddleware) handlePaseto(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if err != nil {
-		p.Options.ErrorHandler(w, r, err)
+		p.ErrorHandler(w, r, err)
 		return fmt.Errorf("error extracting pas: %v", err)
 	}
 
 	if pas == "" {
-		if p.Options.CredentialsOptional {
+		if p.CredentialsOptional {
 			p.logf("\tNo credentials found (CredentialsOptional=true)\n")
 			return nil
 		}
 
 		errorMsg := "required auth paseto not found"
-		p.Options.ErrorHandler(w, r, errors.New(errorMsg))
+		p.ErrorHandler(w, r, errors.New(errorMsg))
 		p.logf("\tError: No credentials found (CredentialsOptional=false)\n")
 		return fmt.Errorf(errorMsg)
 	}
@@ -120,18 +118,18 @@ func (p *PasetoMiddleware) handlePaseto(w http.ResponseWriter, r *http.Request) 
 		token  paseto.JSONToken
 	)
 
-	err = p.Options.Decryptor(pas, &token, &footer)
+	err = p.Decryptor(pas, &token, &footer)
 
 	if err != nil {
 		p.logf("Error decrypting pas: %v\n", err)
-		p.Options.ErrorHandler(w, r, err)
+		p.ErrorHandler(w, r, err)
 		return fmt.Errorf("error decrypting pas")
 	} else {
 		p.logf("Paseto decrypted: %s - %s\n", token, footer)
 	}
 
-	c := context.WithValue(r.Context(), p.Options.TokenProperty, &token)
-	c = context.WithValue(c, p.Options.FooterProperty, &footer)
+	c := context.WithValue(r.Context(), p.TokenProperty, &token)
+	c = context.WithValue(c, p.FooterProperty, &footer)
 	newRequest := r.WithContext(c)
 
 	*r = *newRequest
