@@ -65,8 +65,8 @@ func OnError(w http.ResponseWriter, r *http.Request, err error) {
 // New constructs a PasetoMiddleware structure with the supplied options
 func New(options ...Option) (*PasetoMiddleware, error) {
 	def := &PasetoMiddleware{
-		TokenProperty:  "token",
-		FooterProperty: "paseto_footer",
+		TokenProperty:  TokenKey("token"),
+		FooterProperty: FooterKey("paseto_footer"),
 		ErrorHandler:   OnError,
 	}
 
