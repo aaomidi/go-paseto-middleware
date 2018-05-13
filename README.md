@@ -3,6 +3,7 @@
 [![Build Status](http://img.shields.io/travis/o1egl/paseto.svg?style=flat-square)](https://travis-ci.org/aaomidi/go-paseto-middleware)
 [![Travis](https://travis-ci.com/aaomidi/go-paseto-middleware.svg?branch=master&style=flat-square)](https://travis-ci.com/aaomidi/go-paseto-middleware)
 [![Go Report Card](https://goreportcard.com/badge/github.com/aaomidi/go-paseto-middleware)](https://goreportcard.com/report/github.com/aaomidi/go-paseto-middleware)
+[![GoDoc](https://godoc.org/github.com/aaomidi/go-paseto-middleware?status.svg)](https://godoc.org/github.com/aaomidi/go-pasteo-middleware)
 
 
 A middleware that will check that a Paseto token is sent in a request. It will then set the contents of the token into the context of the request.
@@ -69,6 +70,31 @@ func (backend *Backend) Middleware(optional bool) *pasetomiddleware.PasetoMiddle
 
     router.Handle("/profile", auth.Auth().Middleware(false).NextFunc(profile)).Methods("GET")
     // You can also use .Next(http.Handler) to add another middleware.
+````
+
+To get the token from the request, you will do the following:
+
+
+````golang
+// This is initiated before.
+var authedMiddleware *pasetomiddleware.PasetoMiddleware
+
+func getUUIDFromRequest(r *http.Request) (uuid.UUID, error) {
+	t, ok := r.Context().Value(authedMiddleware.TokenProperty).(*paseto.JSONToken)
+	if !ok {
+		return uuid.New(), errors.New("token not valid")
+	}
+
+    // I put the UUID string with the user key into the token Map
+	id := t.Get("user")
+	if id == "" {
+		return uuid.New(), errors.New("token not valid")
+	}
+
+    // Parses the UUID
+	uid, err := uuid.Parse(fmt.Sprint(id))
+	return uid, err
+}
 ````
 
 # Inspiration
