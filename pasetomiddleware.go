@@ -10,14 +10,13 @@ import (
 	"github.com/o1egl/paseto"
 )
 
-type ErrorHandler func(w http.ResponseWriter, r *http.Request, err error)
-
-type TokenExtractor func(r *http.Request) (string, error)
-type TokenDecryptor func(pas string, token *paseto.JSONToken, footer *string) error
-
 // Option is a function for setting options within the PasetoMiddleware struct
 type Option func(*PasetoMiddleware)
 
+// contextKey should be used instead of a basic string
+type contextKey string
+
+// PasetoMiddleware struct for specifying all the configuration options for this middleware
 type PasetoMiddleware struct {
 	Extractor TokenExtractor
 	Decryptor TokenDecryptor
@@ -37,6 +36,7 @@ type PasetoMiddleware struct {
 	Debug bool
 }
 
+// Next goes through the middleware and passes itself onto another http.Handler
 func (p *PasetoMiddleware) Next(handler http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := p.handlePaseto(w, r); err == nil && handler != nil {
@@ -45,6 +45,7 @@ func (p *PasetoMiddleware) Next(handler http.Handler) http.HandlerFunc {
 	}
 }
 
+// NextFunc goes through the middleware and passes itself onto another http.HandlerFunc
 func (p *PasetoMiddleware) NextFunc(handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := p.handlePaseto(w, r); err == nil && handler != nil {
@@ -53,10 +54,12 @@ func (p *PasetoMiddleware) NextFunc(handler http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// OnError is a default error handler
 func OnError(w http.ResponseWriter, r *http.Request, err error) {
 	http.Error(w, err.Error(), http.StatusUnauthorized)
 }
 
+// New constructs a PasetoMiddleware structure with the supplied options
 func New(options ...Option) (*PasetoMiddleware, error) {
 	def := &PasetoMiddleware{
 		TokenProperty:  "token",
@@ -122,12 +125,15 @@ func (p *PasetoMiddleware) handlePaseto(w http.ResponseWriter, r *http.Request) 
 		p.logf("Error decrypting pas: %v\n", err)
 		p.ErrorHandler(w, r, err)
 		return fmt.Errorf("error decrypting pas")
-	} else {
-		p.logf("Paseto decrypted: %s - %s\n", token, footer)
 	}
 
-	c := context.WithValue(r.Context(), p.TokenProperty, &token)
-	c = context.WithValue(c, p.FooterProperty, &footer)
+	p.logf("Paseto decrypted: %s - %s\n", token, footer)
+
+	tokenKey := contextKey(p.TokenProperty)
+	footerKey := contextKey(p.FooterProperty)
+
+	c := context.WithValue(r.Context(), tokenKey, &token)
+	c = context.WithValue(c, footerKey, &footer)
 	newRequest := r.WithContext(c)
 
 	*r = *newRequest
