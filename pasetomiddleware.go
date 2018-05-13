@@ -35,8 +35,6 @@ type PasetoMiddleware struct {
 	CredentialsOptional bool
 
 	Debug bool
-
-	log.Logger
 }
 
 func (p *PasetoMiddleware) Next(handler http.Handler) http.HandlerFunc {
