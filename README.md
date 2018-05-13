@@ -16,7 +16,55 @@ This library is written for use with [o1egl's paseto library](https://github.com
 
 You can use the `pasetomiddleware` with default `net/http` as follows:
 
+````golang
+package auth
 
+type Backend struct {
+	secretKey string
+}
+
+func Auth() *Backend {
+	if authBackendInstance == nil {
+		authBackendInstance = &Backend{
+			secretKey: "YELLOW SUBMARINE, BLACK WIZARDRY", // Obviously don't use this exact string.
+		}
+	}
+
+	return authBackendInstance
+}
+
+func (backend *Backend) Middleware(optional bool) *pasetomiddleware.PasetoMiddleware {
+	middleware, _ := pasetomiddleware.New(
+		pasetomiddleware.Extractor(func(r *http.Request) (string, error) {
+			cookie, err := r.Cookie("paseto")
+			if err != nil {
+				return "", err
+			}
+			return cookie.Value, nil
+		}),
+
+		pasetomiddleware.Decryptor(func(pas string, token *paseto.JSONToken, footer *string) error {
+			v2 := paseto.NewV2()
+			err := v2.Decrypt(pas, []byte(backend.secretKey), token, footer)
+			return err
+		}),
+		pasetomiddleware.CredentialsOptional(optional),
+
+		pasetomiddleware.Debug(optional),
+	)
+
+	return middleware
+}
+````
+
+````golang
+    package api
+
+    router := mux.newRouter()
+
+    router.Handle("/profile", auth.Auth().Middleware(false).NextFunc(profile)).Methods("GET")
+    // You can also use .Next(http.Handler) to add another middleware.
+````
 
 # Inspiration
 
