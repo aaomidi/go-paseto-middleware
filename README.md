@@ -1,6 +1,5 @@
 # GO Paseto Middleware
 [![License](http://img.shields.io/:license-mit-blue.svg)](LICENSE)
-[![Build Status](http://img.shields.io/travis/o1egl/paseto.svg?style=flat-square)](https://travis-ci.org/aaomidi/go-paseto-middleware)
 [![Travis](https://travis-ci.com/aaomidi/go-paseto-middleware.svg?branch=master&style=flat-square)](https://travis-ci.com/aaomidi/go-paseto-middleware)
 [![Go Report Card](https://goreportcard.com/badge/github.com/aaomidi/go-paseto-middleware)](https://goreportcard.com/report/github.com/aaomidi/go-paseto-middleware)
 [![GoDoc](https://godoc.org/github.com/aaomidi/go-paseto-middleware?status.svg)](https://godoc.org/github.com/aaomidi/go-pasteo-middleware)
