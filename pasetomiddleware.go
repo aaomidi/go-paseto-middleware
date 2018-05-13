@@ -13,8 +13,11 @@ import (
 // Option is a function for setting options within the PasetoMiddleware struct
 type Option func(*PasetoMiddleware)
 
-// contextKey should be used instead of a basic string
-type contextKey string
+// TokenKey defines the key to access the decrypted paseto token
+type TokenKey string
+
+// FooterKey defines the key to access the decrypted paseto footer
+type FooterKey string
 
 // PasetoMiddleware struct for specifying all the configuration options for this middleware
 type PasetoMiddleware struct {
@@ -23,11 +26,11 @@ type PasetoMiddleware struct {
 
 	// The name of the property where the token will be stored
 	// Default value: token
-	TokenProperty string
+	TokenProperty TokenKey
 
 	// The name of the property where the footer will be stored
 	// Default value: paseto footer
-	FooterProperty string
+	FooterProperty FooterKey
 
 	ErrorHandler ErrorHandler
 
@@ -129,11 +132,8 @@ func (p *PasetoMiddleware) handlePaseto(w http.ResponseWriter, r *http.Request) 
 
 	p.logf("Paseto decrypted: %s - %s\n", token, footer)
 
-	tokenKey := contextKey(p.TokenProperty)
-	footerKey := contextKey(p.FooterProperty)
-
-	c := context.WithValue(r.Context(), tokenKey, &token)
-	c = context.WithValue(c, footerKey, &footer)
+	c := context.WithValue(r.Context(), p.TokenProperty, &token)
+	c = context.WithValue(c, p.FooterProperty, &footer)
 	newRequest := r.WithContext(c)
 
 	*r = *newRequest

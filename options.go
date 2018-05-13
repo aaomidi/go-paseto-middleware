@@ -44,16 +44,16 @@ func CredentialsOptional(o bool) Option {
 }
 
 // TokenProperty defines where the unencrypted Paseto token should be stored in the context of the request.
-func TokenProperty(tp string) Option {
+func TokenProperty(tk TokenKey) Option {
 	return func(p *PasetoMiddleware) {
-		p.TokenProperty = tp
+		p.TokenProperty = tk
 	}
 }
 
 // FooterProperty defines where the unencrypted Paseto footer should be stored in the context of the request.
-func FooterProperty(fp string) Option {
+func FooterProperty(fk FooterKey) Option {
 	return func(p *PasetoMiddleware) {
-		p.FooterProperty = fp
+		p.FooterProperty = fk
 	}
 }
 
